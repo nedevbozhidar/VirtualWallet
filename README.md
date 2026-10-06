@@ -1,56 +1,47 @@
-# Virtual Wallet 💳
+# Virtual Wallet
 
-A full-featured web application built with **C# .NET 10** and **Entity Framework Core** that enables users to manage personal budgets, send and receive money user-to-user, fund wallets via bank cards, manage joint/savings wallets, track spending categories, and perform administrative oversight.
+Virtual Wallet is an ASP.NET Core web application built with C# .NET 10 and Entity Framework Core for managing personal budgets and digital transfers. The platform enables users to send and receive funds user-to-user, fund wallets via payment cards, manage joint and savings accounts, track spending categories, and perform administrative oversight.
 
----
+## Solution Architecture
 
-## 🏗️ Architecture & Layered Structure
+The solution uses a tiered, multi-project structure:
 
-The project follows SOLID principles, OOP best practices, and a **tiered/layered architecture**:
+- **VirtualWallet.Data**: Domain entities, enums, Entity Framework Core DbContext, migrations, and SQL scripts.
+- **VirtualWallet.Business**: Business logic, services, DTOs, and validation rules.
+- **VirtualWallet.Web**: ASP.NET Core MVC views and REST API controllers with Swagger documentation.
+- **VirtualWallet.DummyApi**: Standalone dummy REST API simulating bank card withdrawals.
+- **VirtualWallet.Tests**: xUnit unit testing project covering business service logic.
 
-```
-VirtualWallet.sln
-├── VirtualWallet.Data          # Domain Entities, Enums, DbContext, Mappings, Migrations & Scripts
-├── VirtualWallet.Business      # Core Business Logic, Services, DTOs, and Validations
-├── VirtualWallet.Web           # ASP.NET Core MVC Views & REST API Controllers (Swagger)
-├── VirtualWallet.DummyApi     # Standalone Dummy Bank REST API for Card Top-ups
-└── VirtualWallet.Tests         # xUnit BDD Unit Tests (>= 80% coverage)
-```
+## Features
 
----
+### Authentication & Profiles
+- Registration and login with cookie authentication for MVC views and JWT tokens for REST API endpoints.
+- Profile management (email, phone, photo) with locked username after registration.
+- Email verification and identity verification workflows.
 
-## ✨ Features
+### Wallets & Cards
+- Credit/debit card registration with card number validation.
+- Card-to-wallet funding using the dummy bank REST API.
+- Support for multiple wallet types:
+  - Personal wallets.
+  - Joint wallets with multi-user permissions (spend / add money).
+  - Savings wallets with maturity dates and calculated interest rates.
+- Overdraft support with configurable interest rates.
 
-### 🔑 Public & Account Management
-- **Registration & Authentication**: Cookie-based authentication for MVC UI and JWT Tokens for REST API.
-- **Profile Management**: Update profile details, photo upload, and view account details (username locked upon registration).
-- **Email & Identity Verification**: Verification codes (OTP) and photo ID + selfie approval workflows.
+### Transfers & Transactions
+- User-to-user transfers by username, email, or phone number.
+- Pre-transfer confirmation step displaying transfer details.
+- High-value transaction verification via one-time verification codes.
+- Spending categories and breakdown analytics.
+- Automated recurring transactions.
+- Multi-currency support (EUR, USD, GBP) with exchange rate conversions.
 
-### 💰 Wallet & Cards
-- **Card Management**: Register credit/debit cards (16-digit validation, CVV, expiry).
-- **Wallet Top-Up (Transfers)**: Fund wallets directly from bank cards via the dummy bank REST API.
-- **Multiple Wallet Types**:
-  - **Personal**: Standard default individual wallet.
-  - **Joint**: Shared wallet with multi-user access and granular permissions (`CanSpend`, `CanAddMoney`).
-  - **Savings**: Savings wallets with custom maturity dates and calculated interest rates.
-- **Overdraft Support**: Interest rate modifiers, negative balance limits, and overdraft tracking.
+### Administration
+- User management panel to view, search, and block or unblock accounts.
+- System-wide transaction listing with filtering by date, sender, recipient, and direction.
+- Identity verification submission review.
 
-### 💸 User-to-User Transfers & Transactions
-- **Money Transfers**: Search recipient by **Username**, **Email**, or **Phone Number**.
-- **Confirmation Step**: Review transfer details prior to final execution.
-- **Large Transaction Security**: Automated OTP code prompt for high-value transactions.
-- **Spending Categories & Analytics**: Categorize transfers (Groceries, Rent, Utilities, etc.) and generate breakdown reports.
-- **Recurring Transactions**: Automated periodic scheduled payments.
-- **Multi-Currency Support**: Real-time cross-currency transfer exchange rates (`EUR`, `USD`, `GBP`).
-
-### 🛡️ Administrative Capabilities
-- **User Management**: View paginated list of all users, search by phone/username/email, and block/unblock accounts.
-- **Transaction Oversight**: View, filter (date, direction, sender, recipient), and sort all system transactions.
-- **Identity Review**: Approve or reject pending identity verification submissions.
-
----
-
-## 📊 Database Schema & ER Diagram
+## Database Schema
 
 ```mermaid
 erDiagram
@@ -70,11 +61,11 @@ erDiagram
 
     User {
         int Id PK
-        string Username "2-20 chars, unique"
+        string Username
         string PasswordHash
         string Salt
-        string Email "unique"
-        string PhoneNumber "10 digits, unique"
+        string Email
+        string PhoneNumber
         bool IsBlocked
         bool IsEmailVerified
         string IdentityVerificationStatus
@@ -84,7 +75,7 @@ erDiagram
         int Id PK
         string Name
         decimal Balance
-        string Type "Personal, Joint, Savings"
+        string Type
         bool IsDefault
         bool IsOverdraftEnabled
         decimal OverdraftLimit
@@ -92,16 +83,16 @@ erDiagram
 
     Card {
         int Id PK
-        string CardNumber "16 digits, unique"
+        string CardNumber
         DateTime ExpirationDate
         string CardHolder
-        string CheckNumber "3 digits"
+        string CheckNumber
     }
 
     Transaction {
         int Id PK
         decimal Amount
-        string Status "Pending, Confirmed, Declined"
+        string Status
         int SenderUserId FK
         int RecipientUserId FK
         int CategoryId FK
@@ -116,55 +107,41 @@ erDiagram
     }
 ```
 
----
-
-## 🚀 Getting Started & Local Setup
+## Local Setup
 
 ### Prerequisites
-- [.NET 10 SDK](https://dotnet.microsoft.com/)
-- [Docker Desktop](https://www.docker.com/) (or OrbStack)
-- SQL Server Container
+- .NET 10 SDK
+- Docker Desktop or OrbStack
 
-### 1. Start SQL Server via Docker
-Run the container on port `1433`:
+### 1. Start SQL Server Container
+Run SQL Server in Docker:
+
 ```bash
 docker run -e ACCEPT_EULA=Y -e 'MSSQL_SA_PASSWORD=YourPassword123!' -p 1433:1433 --name mssql -d mcr.microsoft.com/azure-sql-edge
 ```
 
-### 2. Configure Database & Apply Migrations
-From the solution root folder, run:
+### 2. Apply Database Migrations
+Apply EF Core migrations to create the database schema and seed initial data:
+
 ```bash
-# Update Database and seed test data
 dotnet ef database update --project VirtualWallet.Data --startup-project VirtualWallet.Web
 ```
 
 ### 3. Run the Web Application
+Start the web application:
+
 ```bash
 dotnet run --project VirtualWallet.Web
 ```
-Access the application at: **`http://localhost:5178`**
 
----
+The web application will be available at `http://localhost:5178`.
 
-## 📖 API Documentation (Swagger)
+## API Documentation
 
-The REST API is documented using OpenAPI / Swagger:
-- **Interactive Swagger UI**: [`http://localhost:5178/swagger`](http://localhost:5178/swagger)
+Swagger API documentation is accessible when running the project at:
+`http://localhost:5178/swagger`
 
----
+## Database Scripts
 
-## 🧪 Pre-configured Test Accounts
-
-The system comes pre-seeded with test accounts for quick evaluation:
-
-| Account Type | Username | Password / Info | Details |
-| :--- | :--- | :--- | :--- |
-| **Admin** | `admin` | `admin@virtualwallet.com` | Full Administrative Privileges |
-| **User 1** | `john_doe` | `john@virtualwallet.com` | Pre-loaded with 1,000 EUR + Card |
-| **User 2** | `jane_smith` | `jane@virtualwallet.com` | Pre-loaded with 500 EUR + Card |
-
----
-
-## 📜 Database Scripts
-- DB Creation Script: [`VirtualWallet.Data/Scripts/create_database.sql`](./VirtualWallet.Data/Scripts/create_database.sql)
-- DB Seed Data Script: [`VirtualWallet.Data/Scripts/seed_data.sql`](./VirtualWallet.Data/Scripts/seed_data.sql)
+- Database creation script: `VirtualWallet.Data/Scripts/create_database.sql`
+- Seed data script: `VirtualWallet.Data/Scripts/seed_data.sql`
