@@ -1,0 +1,14 @@
+namespace VirtualWallet.Data.Models;
+
+public class Contact
+{
+    public int Id { get; set; }
+
+    public int UserId { get; set; }
+    public User User { get; set; } = null!;
+
+    public int ContactUserId { get; set; }
+    public User ContactUser { get; set; } = null!;
+
+    public DateTime CreatedAt { get; set; }
+}

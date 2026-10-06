@@ -1,0 +1,6 @@
+@VirtualWallet.DummyApi_HostAddress = http://localhost:5095
+
+GET {{VirtualWallet.DummyApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
