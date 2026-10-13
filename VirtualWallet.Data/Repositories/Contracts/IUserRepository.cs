@@ -1,4 +1,5 @@
 using VirtualWallet.Data.Models;
+
 namespace VirtualWallet.Data.Repositories.Contracts;
 
 public interface IUserRepository
