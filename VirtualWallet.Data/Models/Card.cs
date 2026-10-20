@@ -3,10 +3,10 @@ namespace VirtualWallet.Data.Models;
 public class Card
 {
     public int Id { get; set; }
-    public string CardNumber { get; set; } = null!;
+    public string ProtectedCardNumber { get; set; } = null!;
+    public string LastFour { get; set; } = null!;
     public DateTime ExpirationDate { get; set; }
     public string CardHolder { get; set; } = null!;
-    public string CheckNumber { get; set; } = null!;
     public bool IsPrimary { get; set; }
 
     public int UserId { get; set; }

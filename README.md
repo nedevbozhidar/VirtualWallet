@@ -83,10 +83,10 @@ erDiagram
 
     Card {
         int Id PK
-        string CardNumber
+        string ProtectedCardNumber
+        string LastFour
         DateTime ExpirationDate
         string CardHolder
-        string CheckNumber
     }
 
     Transaction {
@@ -133,6 +133,10 @@ Start the web application:
 ```bash
 dotnet run --project VirtualWallet.Web
 ```
+
+ASP.NET Core Data Protection needs its key ring to persist across restarts; losing that key ring makes stored card numbers unreadable.
+
+Card numbers are encrypted before they reach the database. The database stores only the encrypted card number and last four digits for display. CVVs are not stored; funding requests must provide the CVV again.
 
 The web application will be available at `http://localhost:5178`.
 

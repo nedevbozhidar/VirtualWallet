@@ -1,17 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using VirtualWallet.Data.Models;
 using VirtualWallet.Data.Models.Enums;
+using VirtualWallet.Data.Security;
 
 namespace VirtualWallet.Data.Context;
 
 public static class DbInitializer
 {
-    public static void SeedTestData(VirtualWalletDbContext context)
+    public static void SeedTestData(VirtualWalletDbContext context, ICardDataProtector cardDataProtector)
     {
-        // 1. Ensure database is created
-        context.Database.EnsureCreated();
-
-        // 2. Check if test users already exist
+        // Check if test users already exist.
         if (context.Users.Any(u => u.Username == "john_doe"))
         {
             return; // DB has been seeded already
@@ -77,13 +75,13 @@ public static class DbInitializer
         context.Users.AddRange(admin, john, jane);
         context.SaveChanges();
 
-        // 4. Create Cards
+        // 4. Create sample cards with protected PANs. CVVs are never persisted.
         var johnCard = new Card
         {
-            CardNumber = "4111111111111111",
+            ProtectedCardNumber = cardDataProtector.Protect("4111111111111111"),
+            LastFour = "1111",
             ExpirationDate = DateTime.UtcNow.AddYears(3),
             CardHolder = "John Doe",
-            CheckNumber = "123",
             IsPrimary = true,
             UserId = john.Id,
             CreatedAt = DateTime.UtcNow
@@ -91,10 +89,10 @@ public static class DbInitializer
 
         var janeCard = new Card
         {
-            CardNumber = "4222222222222222",
+            ProtectedCardNumber = cardDataProtector.Protect("4222222222222222"),
+            LastFour = "2222",
             ExpirationDate = DateTime.UtcNow.AddYears(2),
             CardHolder = "Jane Smith",
-            CheckNumber = "456",
             IsPrimary = true,
             UserId = jane.Id,
             CreatedAt = DateTime.UtcNow

@@ -125,22 +125,18 @@ public class VirtualWalletDbContext : DbContext
         {
             entity.HasKey(c => c.Id);
 
-            entity.Property(c => c.CardNumber)
+            entity.Property(c => c.ProtectedCardNumber)
                 .IsRequired()
-                .HasMaxLength(16)
-                .IsFixedLength();
+                .HasMaxLength(500);
 
-            entity.HasIndex(c => c.CardNumber)
-                .IsUnique();
+            entity.Property(c => c.LastFour)
+                .IsRequired()
+                .HasMaxLength(4)
+                .IsFixedLength();
 
             entity.Property(c => c.CardHolder)
                 .IsRequired()
                 .HasMaxLength(30);
-
-            entity.Property(c => c.CheckNumber)
-                .IsRequired()
-                .HasMaxLength(3)
-                .IsFixedLength();
 
             entity.Property(c => c.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
@@ -192,7 +188,7 @@ public class VirtualWalletDbContext : DbContext
                 .HasForeignKey(w => w.CurrencyId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Self-referencing FK: Savings wallet → source wallet
+            // Self-referencing FK: Savings wallet => source wallet
             entity.HasOne(w => w.SourceWallet)
                 .WithMany()
                 .HasForeignKey(w => w.SourceWalletId)

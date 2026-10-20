@@ -29,19 +29,6 @@ public class CardRepository : ICardRepository
             .ToListAsync();
     }
 
-    public async Task<Card?> GetByCardNumberAsync(string cardNumber)
-    {
-        return await _context.Cards
-            .Include(c => c.User)
-            .FirstOrDefaultAsync(c => c.CardNumber == cardNumber);
-    }
-
-    public async Task<bool> ExistsByCardNumberAsync(string cardNumber)
-    {
-        return await _context.Cards
-            .AnyAsync(c => c.CardNumber == cardNumber);
-    }
-
     public async Task AddAsync(Card card)
     {
         await _context.Cards.AddAsync(card);

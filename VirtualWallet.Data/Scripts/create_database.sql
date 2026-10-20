@@ -46,10 +46,10 @@ CREATE TABLE [Users] (
 
 CREATE TABLE [Cards] (
     [Id] int NOT NULL IDENTITY,
-    [CardNumber] nchar(16) NOT NULL,
+    [ProtectedCardNumber] nvarchar(500) NOT NULL,
+    [LastFour] nchar(4) NOT NULL,
     [ExpirationDate] datetime2 NOT NULL,
     [CardHolder] nvarchar(30) NOT NULL,
-    [CheckNumber] nchar(3) NOT NULL,
     [IsPrimary] bit NOT NULL,
     [UserId] int NOT NULL,
     [CreatedAt] datetime2 NOT NULL DEFAULT (GETUTCDATE()),
@@ -221,8 +221,6 @@ VALUES (1, N'User'),
 (2, N'Admin');
 IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'Name') AND [object_id] = OBJECT_ID(N'[Roles]'))
     SET IDENTITY_INSERT [Roles] OFF;
-
-CREATE UNIQUE INDEX [IX_Cards_CardNumber] ON [Cards] ([CardNumber]);
 
 CREATE INDEX [IX_Cards_UserId] ON [Cards] ([UserId]);
 

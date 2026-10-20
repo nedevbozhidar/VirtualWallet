@@ -8,4 +8,5 @@ public interface ICardService
     Task<IEnumerable<CardResponseDto>> GetUserCardsAsync(int userId);
     Task<CardResponseDto> GetByIdAsync(int cardId, int userId);
     Task DeleteCardAsync(int cardId, int userId);
+    Task SetPrimaryCardAsync(int cardId, int userId);
 }

@@ -5,30 +5,49 @@ using VirtualWallet.Business.Services.Contracts;
 using VirtualWallet.Data.Models;
 using VirtualWallet.Data.Models.Enums;
 using VirtualWallet.Data.Repositories.Contracts;
+using VirtualWallet.Data.Security;
 
 namespace VirtualWallet.Business.Services.Implementations;
 
 public class TransferService : ITransferService
 {
+    private const decimal MaximumFundingAmount = 10_000_000m;
+
     private readonly ITransferRepository _transferRepository;
     private readonly ICardRepository _cardRepository;
     private readonly IWalletRepository _walletRepository;
     private readonly HttpClient _httpClient;
+    private readonly ICardDataProtector _cardDataProtector;
 
     public TransferService(
         ITransferRepository transferRepository,
         ICardRepository cardRepository,
         IWalletRepository walletRepository,
-        HttpClient httpClient)
+        HttpClient httpClient,
+        ICardDataProtector cardDataProtector)
     {
         _transferRepository = transferRepository;
         _cardRepository = cardRepository;
         _walletRepository = walletRepository;
         _httpClient = httpClient;
+        _cardDataProtector = cardDataProtector;
     }
     
     public async Task<TransferResponseDto> FundWalletFromCardAsync(int userId, TransferCreateDto dto)
     {
+        if (dto.Amount <= 0 || dto.Amount > MaximumFundingAmount)
+        {
+            throw new InvalidUserInputException(
+                $"Funding amount must be greater than zero and no more than {MaximumFundingAmount:N0}.");
+        }
+
+        if (dto.CheckNumber is null
+            || dto.CheckNumber.Length != 3
+            || dto.CheckNumber.Any(character => !char.IsDigit(character)))
+        {
+            throw new InvalidUserInputException("Check number (CVV) must be exactly 3 digits.");
+        }
+
         Card card = await _cardRepository.GetByIdAsync(dto.CardId)
                     ?? throw new EntityNotFoundException("Card was not found.");
 
@@ -47,10 +66,10 @@ public class TransferService : ITransferService
 
         var withdrawalRequest = new
         {
-            CardNumber = card.CardNumber,
+            CardNumber = _cardDataProtector.Unprotect(card.ProtectedCardNumber),
             CardHolder = card.CardHolder,
             ExpirationDate = card.ExpirationDate,
-            CheckNumber = card.CheckNumber,
+            CheckNumber = dto.CheckNumber,
             Amount = dto.Amount
         };
 

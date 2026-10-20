@@ -39,21 +39,7 @@ DECLARE @JaneId INT = (SELECT Id FROM Users WHERE Username = 'jane_smith');
 DECLARE @EurId INT = (SELECT Id FROM Currencies WHERE Code = 'EUR');
 DECLARE @UsdId INT = (SELECT Id FROM Currencies WHERE Code = 'USD');
 
--- 2. Insert Credit/Debit Cards
-IF NOT EXISTS (SELECT 1 FROM [Cards] WHERE [CardNumber] = N'4111111111111111')
-BEGIN
-    INSERT INTO [Cards] ([CardNumber], [ExpirationDate], [CardHolder], [CheckNumber], [IsPrimary], [UserId], [CreatedAt])
-    VALUES 
-        (N'4111111111111111', DATEADD(YEAR, 3, GETUTCDATE()), N'John Doe', N'123', 1, @JohnId, GETUTCDATE());
-END
-
-IF NOT EXISTS (SELECT 1 FROM [Cards] WHERE [CardNumber] = N'4222222222222222')
-BEGIN
-    INSERT INTO [Cards] ([CardNumber], [ExpirationDate], [CardHolder], [CheckNumber], [IsPrimary], [UserId], [CreatedAt])
-    VALUES 
-        (N'4222222222222222', DATEADD(YEAR, 2, GETUTCDATE()), N'Jane Smith', N'456', 1, @JaneId, GETUTCDATE());
-END
-GO
+-- Cards are not seeded in SQL because card PANs must be protected by the application.
 
 -- Re-declare variables after GO batch separator
 DECLARE @AdminId INT = (SELECT Id FROM Users WHERE Username = 'admin');
@@ -111,20 +97,12 @@ BEGIN
 END
 GO
 
--- 6. Insert Sample Transactions & Top-Up Transfers
+-- 6. Insert Sample User-to-User Transfer
 DECLARE @JohnId INT = (SELECT Id FROM Users WHERE Username = 'john_doe');
 DECLARE @JaneId INT = (SELECT Id FROM Users WHERE Username = 'jane_smith');
 DECLARE @JohnWalletId INT = (SELECT Id FROM Wallets WHERE UserId = @JohnId AND IsDefault = 1);
 DECLARE @JaneWalletId INT = (SELECT Id FROM Wallets WHERE UserId = @JaneId AND IsDefault = 1);
-DECLARE @JohnCardId INT = (SELECT Id FROM Cards WHERE UserId = @JohnId);
 DECLARE @GroceriesCategoryId INT = (SELECT Id FROM Categories WHERE UserId = @JohnId AND Name = N'Groceries');
-
--- Card Top-Up Transfer
-IF NOT EXISTS (SELECT 1 FROM [Transfers] WHERE [CardId] = @JohnCardId)
-BEGIN
-    INSERT INTO [Transfers] ([Amount], [CreatedAt], [CardId], [WalletId], [Status])
-    VALUES (200.00, GETUTCDATE(), @JohnCardId, @JohnWalletId, N'Confirmed');
-END
 
 -- User-to-User Money Transfer
 IF NOT EXISTS (SELECT 1 FROM [Transactions] WHERE [SenderUserId] = @JohnId AND [RecipientUserId] = @JaneId)

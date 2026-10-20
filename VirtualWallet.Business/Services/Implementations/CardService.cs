@@ -3,6 +3,7 @@ using VirtualWallet.Business.Exceptions;
 using VirtualWallet.Business.Services.Contracts;
 using VirtualWallet.Data.Models;
 using VirtualWallet.Data.Repositories.Contracts;
+using VirtualWallet.Data.Security;
 
 namespace VirtualWallet.Business.Services.Implementations;
 
@@ -10,15 +11,27 @@ public class CardService : ICardService
 {
     private readonly ICardRepository _cardRepository;
     private readonly IUserRepository _userRepository;
+    private readonly ICardDataProtector _cardDataProtector;
 
-    public CardService(ICardRepository cardRepository, IUserRepository userRepository)
+    public CardService(
+        ICardRepository cardRepository,
+        IUserRepository userRepository,
+        ICardDataProtector cardDataProtector)
     {
         _cardRepository = cardRepository;
         _userRepository = userRepository;
+        _cardDataProtector = cardDataProtector;
     }
 
     public async Task<CardResponseDto> AddCardAsync(int userId, CardCreateDto cardDto)
     {
+        if (string.IsNullOrEmpty(cardDto.CardNumber)
+            || cardDto.CardNumber.Length != 16
+            || cardDto.CardNumber.Any(character => !char.IsDigit(character)))
+        {
+            throw new InvalidUserInputException("Card number must be exactly 16 digits.");
+        }
+
         var user = await _userRepository.GetByIdAsync(userId)
                    ?? throw new EntityNotFoundException($"User with ID {userId} was not found.");
 
@@ -27,20 +40,15 @@ public class CardService : ICardService
             throw new InvalidUserInputException("The card expiration date must be in the future.");
         }
 
-        if (await _cardRepository.ExistsByCardNumberAsync(cardDto.CardNumber))
-        {
-            throw new DuplicateEntityException("A card with this number has already been registered.");
-        }
-
         var existingCards = await _cardRepository.GetByUserIdAsync(userId);
         var isFirstCard = !existingCards.Any();
 
         var card = new Card
         {
-            CardNumber = cardDto.CardNumber,
+            ProtectedCardNumber = _cardDataProtector.Protect(cardDto.CardNumber),
+            LastFour = cardDto.CardNumber[^4..],
             ExpirationDate = cardDto.ExpirationDate,
             CardHolder = cardDto.CardHolder,
-            CheckNumber = cardDto.CheckNumber,
             IsPrimary = isFirstCard,
             UserId = userId,
             CreatedAt = DateTime.UtcNow
@@ -83,17 +91,29 @@ public class CardService : ICardService
         await _cardRepository.DeleteAsync(card);
     }
 
+    public async Task SetPrimaryCardAsync(int cardId, int userId)
+    {
+        var userCards = (await _cardRepository.GetByUserIdAsync(userId)).ToList();
+
+        var selectedCard = userCards.FirstOrDefault(card => card.Id == cardId);
+        if (selectedCard is null)
+        {
+            throw new EntityNotFoundException($"Card with ID {cardId} was not found.");
+        }
+
+        foreach (var card in userCards)
+        {
+            card.IsPrimary = card.Id == cardId;
+            await _cardRepository.UpdateAsync(card);
+        }
+    }
+
     private static CardResponseDto MapToDto(Card card)
     {
-        var lastFour = card.CardNumber.Length >= 4
-            ? card.CardNumber[^4..]
-            : card.CardNumber;
-
         return new CardResponseDto
         {
             Id = card.Id,
-            CardNumber = card.CardNumber,
-            MaskedCardNumber = $"**** **** **** {lastFour}",
+            MaskedCardNumber = $"**** **** **** {card.LastFour}",
             ExpirationDate = card.ExpirationDate,
             CardHolder = card.CardHolder,
             IsPrimary = card.IsPrimary,

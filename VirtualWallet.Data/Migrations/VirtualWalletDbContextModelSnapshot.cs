@@ -35,17 +35,16 @@ namespace VirtualWallet.Data.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
-                    b.Property<string>("CardNumber")
+                    b.Property<string>("LastFour")
                         .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("nchar(16)")
+                        .HasMaxLength(4)
+                        .HasColumnType("nchar(4)")
                         .IsFixedLength();
 
-                    b.Property<string>("CheckNumber")
+                    b.Property<string>("ProtectedCardNumber")
                         .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("nchar(3)")
-                        .IsFixedLength();
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -62,9 +61,6 @@ namespace VirtualWallet.Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CardNumber")
-                        .IsUnique();
 
                     b.HasIndex("UserId");
 

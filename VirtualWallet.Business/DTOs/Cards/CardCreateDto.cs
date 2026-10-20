@@ -15,7 +15,4 @@ public class CardCreateDto
     [StringLength(30, MinimumLength = 2, ErrorMessage = "Card holder must be between 2 and 30 symbols.")]
     public string CardHolder { get; set; } = null!;
 
-    [Required]
-    [RegularExpression(@"^\d{3}$", ErrorMessage = "Check number (CVV) must be exactly 3 digits.")]
-    public string CheckNumber { get; set; } = null!;
 }

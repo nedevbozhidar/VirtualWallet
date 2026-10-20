@@ -3,7 +3,6 @@ namespace VirtualWallet.Business.DTOs.Cards;
 public class CardResponseDto
 {
     public int Id { get; set; }
-    public string CardNumber { get; set; } = null!;
     public string MaskedCardNumber { get; set; } = null!;
     public DateTime ExpirationDate { get; set; }
     public string CardHolder { get; set; } = null!;
