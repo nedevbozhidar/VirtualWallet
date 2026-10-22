@@ -104,9 +104,36 @@ public class CardController : ControllerBase
             return NoContent();
         }
         //404
-        catch (Exception e)
+        catch (EntityNotFoundException ex)
         {
-            return NotFound(new { message = e.Message });
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> UpdateCard(int id, [FromBody] CardUpdateDto cardDto)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var updatedCard = await _cardService.UpdateCardAsync(id, userId, cardDto);
+            return Ok(updatedCard);
+        }
+        catch (EntityNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedOperationException)
+        {
+            return Forbid();
+        }
+        catch (InvalidUserInputException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 

@@ -78,9 +78,17 @@ public class WalletService : IWalletService
         var allWallets = await _walletRepository.GetByUserIdAsync(userId);
         foreach (var wallet in allWallets)
         {
-            wallet.IsDefault = wallet.Id == walletId;
+            if (wallet.Id == walletId)
+            {
+                continue;
+            }
+
+            wallet.IsDefault = false;
             await _walletRepository.UpdateAsync(wallet);
         }
+
+        targetWallet.IsDefault = true;
+        await _walletRepository.UpdateAsync(targetWallet);
     }
 
     public async Task DeleteWalletAsync(int walletId, int userId)
@@ -131,7 +139,6 @@ public class WalletService : IWalletService
 
         // Deduct from source wallet
         sourceWallet.Balance -= savingsDto.Amount;
-        await _walletRepository.UpdateAsync(sourceWallet);
 
         // Interest calculation: base 2.0% + 0.25% per each 6 months duration
         var interestRate = 0.02m + (savingsDto.DurationMonths / 6) * 0.0025m;
@@ -151,7 +158,7 @@ public class WalletService : IWalletService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _walletRepository.AddAsync(savingsWallet);
+        await _walletRepository.CreateSavingsWalletWithTransfersAsync(sourceWallet, savingsWallet);
 
         var created = await _walletRepository.GetByIdWithDetailsAsync(savingsWallet.Id) ?? savingsWallet;
         return MapToDto(created);

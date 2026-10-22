@@ -11,4 +11,5 @@ public interface IWalletRepository
     Task UpdateAsync(Wallet wallet);
     Task DeleteAsync(Wallet wallet);
     Task SaveChangesAsync();
+    Task CreateSavingsWalletWithTransfersAsync(Wallet sourceWallet, Wallet savingsWallet);
 }

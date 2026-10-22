@@ -62,4 +62,11 @@ public class WalletRepository : IWalletRepository
     {
         await _context.SaveChangesAsync();
     }
+
+    public async Task CreateSavingsWalletWithTransfersAsync(Wallet sourceWallet, Wallet savingsWallet)
+    {
+        _context.Wallets.Update(sourceWallet);
+        await _context.Wallets.AddAsync(savingsWallet);
+        await SaveChangesAsync();
+    }
 }

@@ -108,6 +108,28 @@ public class CardService : ICardService
         }
     }
 
+    public async Task<CardResponseDto> UpdateCardAsync(int cardId, int userId, CardUpdateDto cardDto)
+    {
+        var card = await _cardRepository.GetByIdAsync(cardId)
+            ?? throw new EntityNotFoundException($"Card with ID {cardId} was not found.");
+
+        if (card.UserId != userId)
+        {
+            throw new UnauthorizedOperationException("You do not have permission to update this card.");
+        }
+
+        if (cardDto.ExpirationDate <= DateTime.UtcNow)
+        {
+            throw new InvalidUserInputException("The card expiration date must be in the future.");
+        }
+
+        card.CardHolder = cardDto.CardHolder;
+        card.ExpirationDate = cardDto.ExpirationDate;
+
+        await _cardRepository.UpdateAsync(card);
+        return MapToDto(card);
+    }
+
     private static CardResponseDto MapToDto(Card card)
     {
         return new CardResponseDto
