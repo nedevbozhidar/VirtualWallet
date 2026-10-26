@@ -148,4 +148,15 @@ public class TransactionRepository : ITransactionRepository
     {
         await _context.SaveChangesAsync();
     }
+
+    public async Task SaveTransactionAndWalletsAsync(Wallet senderWallet, Wallet recipientWallet, Transaction transaction)
+    {
+        _context.Entry(senderWallet)
+            .Property(w => w.Balance).IsModified = true;
+        _context.Entry(recipientWallet)
+            .Property(w => w.Balance).IsModified = true;
+
+        await _context.Transactions.AddAsync(transaction);
+        await _context.SaveChangesAsync();
+    }
 }

@@ -23,4 +23,5 @@ public interface ITransactionRepository
     Task AddAsync(Transaction transaction);
     Task UpdateAsync(Transaction transaction);
     Task SaveChangesAsync();
+    Task SaveTransactionAndWalletsAsync(Wallet senderWallet, Wallet recipientWallet, Transaction transaction);
 }

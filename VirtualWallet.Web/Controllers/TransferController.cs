@@ -42,6 +42,29 @@ public class TransferController : ControllerBase
         }
     }
 
+    [HttpGet("history/{walletId}")]
+    public async Task<IActionResult> GetHistory([FromRoute] int walletId)
+    {
+        if (!TryGetUserId(out int userId)) return Unauthorized();
+
+        try
+        {
+            return Ok(await _transferService.GetTransferHistoryAsync(userId, walletId));
+        }
+        catch (EntityNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidUserInputException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (UnauthorizedOperationException)
+        {
+            return Forbid();
+        }
+    }
+
     private bool TryGetUserId(out int userId)
     {
         userId = 0;

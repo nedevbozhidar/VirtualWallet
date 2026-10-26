@@ -68,9 +68,6 @@ public class TransactionService : ITransactionService
         senderWallet.Balance -= createDto.Amount;
         recipientWallet.Balance += creditAmount;
 
-        await _walletRepository.UpdateAsync(senderWallet);
-        await _walletRepository.UpdateAsync(recipientWallet);
-
         var transaction = new Transaction
         {
             Amount = createDto.Amount,
@@ -86,7 +83,7 @@ public class TransactionService : ITransactionService
             IsVerified = true
         };
 
-        await _transactionRepository.AddAsync(transaction);
+        await _transactionRepository.SaveTransactionAndWalletsAsync(senderWallet, recipientWallet, transaction);
 
         return new TransactionResponseDto
         {

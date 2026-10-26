@@ -105,6 +105,28 @@ public class TransferService : ITransferService
             CreatedAt = transfer.CreatedAt
         };
     }
+
+    public async Task<IEnumerable<TransferHistoryDto>> GetTransferHistoryAsync(int userId, int walletId)
+    {
+        Wallet wallet = await _walletRepository.GetByIdAsync(walletId)
+            ?? throw new EntityNotFoundException("Wallet was not found.");
+
+        if (wallet.UserId != userId)
+        {
+            throw new UnauthorizedOperationException("You do not own this wallet.");
+        }
+
+        IEnumerable<Transfer> transfers =
+            await _transferRepository.GetByWalletIdAsync(walletId);
+
+        return transfers.Select(transfer => new TransferHistoryDto
+        {
+            TransferId = transfer.Id,
+            Amount = transfer.Amount,
+            Status =  transfer.Status.ToString(),
+            CreatedAt = transfer.CreatedAt
+        });
+    }
     
     internal record WithdrawalResultDto(int Id, bool IsSuccess, string Message);
 }

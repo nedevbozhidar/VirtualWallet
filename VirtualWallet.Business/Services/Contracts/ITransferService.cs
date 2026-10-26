@@ -4,4 +4,5 @@ namespace VirtualWallet.Business.Services.Contracts;
 public interface ITransferService
 {
     Task<TransferResponseDto> FundWalletFromCardAsync(int userId, TransferCreateDto dto);
+    Task<IEnumerable<TransferHistoryDto>> GetTransferHistoryAsync(int userId, int walletId);
 }

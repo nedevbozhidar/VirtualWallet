@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace VirtualWallet.Business.DTOs.Transactions;
 
 public class TransactionFilterDto
@@ -11,6 +13,9 @@ public class TransactionFilterDto
     public string? Direction { get; set; } // "incoming" or "outgoing"
     public string? SortBy { get; set; }    // "amount" or "date"
     public bool IsDescending { get; set; } = true;
+
+    [Range(1, int.MaxValue)]
     public int PageNumber { get; set; } = 1;
+    [Range(1, 100)]
     public int PageSize { get; set; } = 10;
 }
