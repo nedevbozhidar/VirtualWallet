@@ -69,7 +69,8 @@ public class TransactionRepository : ITransactionRepository
         string? sortBy = null,
         bool isDescending = true,
         int pageNumber = 1,
-        int pageSize = 10)
+        int pageSize = 10,
+        int? categoryId = null)
     {
         var query = _context.Transactions
             .Include(t => t.SenderUser)
@@ -107,6 +108,11 @@ public class TransactionRepository : ITransactionRepository
         if (endDate.HasValue)
         {
             query = query.Where(t => t.CreatedAt <= endDate.Value);
+        }
+
+        if (categoryId.HasValue)
+        {
+            query = query.Where(t => t.CategoryId == categoryId.Value);
         }
 
         if (!string.IsNullOrWhiteSpace(senderUsername))

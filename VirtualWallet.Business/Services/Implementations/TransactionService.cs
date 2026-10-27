@@ -12,20 +12,23 @@ public class TransactionService : ITransactionService
     private readonly ITransactionRepository _transactionRepository;
     private readonly IWalletRepository _walletRepository;
     private readonly IUserRepository _userRepository;
+    private readonly ICategoryRepository _categoryRepository;
 
     public TransactionService(
         ITransactionRepository transactionRepository,
         IWalletRepository walletRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        ICategoryRepository categoryRepository)
     {
         _transactionRepository = transactionRepository;
         _walletRepository = walletRepository;
         _userRepository = userRepository;
+        _categoryRepository = categoryRepository;
     }
 
     public async Task<TransactionPreviewDto> PreviewTransactionAsync(int senderUserId, TransactionCreateDto createDto)
     {
-        var (senderUser, senderWallet, recipientUser, recipientWallet) = await ValidateAndResolveParticipantsAsync(senderUserId, createDto);
+        var (senderUser, senderWallet, recipientUser, recipientWallet, category) = await ValidateAndResolveParticipantsAsync(senderUserId, createDto);
 
         return new TransactionPreviewDto
         {
@@ -33,13 +36,14 @@ public class TransactionService : ITransactionService
             Amount = createDto.Amount,
             SenderWalletName = senderWallet.Name,
             CurrencyCode = senderWallet.Currency?.Code ?? "EUR",
-            Description = createDto.Description
+            Description = createDto.Description,
+            CategoryName =  category?.Name
         };
     }
 
     public async Task<TransactionResponseDto> ExecuteTransactionAsync(int senderUserId, TransactionCreateDto createDto)
     {
-        var (senderUser, senderWallet, recipientUser, recipientWallet) = await ValidateAndResolveParticipantsAsync(senderUserId, createDto);
+        var (senderUser, senderWallet, recipientUser, recipientWallet, category) = await ValidateAndResolveParticipantsAsync(senderUserId, createDto);
 
         // Check available funds (including overdraft if enabled)
         var availableFunds = senderWallet.Balance + (senderWallet.IsOverdraftEnabled ? senderWallet.OverdraftLimit : 0m);
@@ -94,7 +98,8 @@ public class TransactionService : ITransactionService
             SenderUsername = senderUser.Username,
             RecipientUsername = recipientUser.Username,
             Status = transaction.Status.ToString(),
-            ExchangeRate = transaction.ExchangeRate
+            ExchangeRate = transaction.ExchangeRate,
+            CategoryName = category?.Name
         };
     }
 
@@ -111,7 +116,8 @@ public class TransactionService : ITransactionService
             sortBy: filterDto.SortBy,
             isDescending: filterDto.IsDescending,
             pageNumber: filterDto.PageNumber,
-            pageSize: filterDto.PageSize);
+            pageSize: filterDto.PageSize,
+            categoryId: filterDto.CategoryId);
 
         return transactions.Select(t => new TransactionResponseDto
         {
@@ -151,7 +157,7 @@ public class TransactionService : ITransactionService
         };
     }
 
-    private async Task<(User SenderUser, Wallet SenderWallet, User RecipientUser, Wallet RecipientWallet)>
+    private async Task<(User SenderUser, Wallet SenderWallet, User RecipientUser, Wallet RecipientWallet, Category? category)>
         ValidateAndResolveParticipantsAsync(int senderUserId, TransactionCreateDto createDto)
     {
         var senderUser = await _userRepository.GetByIdAsync(senderUserId)
@@ -182,6 +188,21 @@ public class TransactionService : ITransactionService
             throw new InvalidUserInputException("You cannot send money to yourself.");
         }
 
+        Category? category = null;
+        //category lookup only when it has a value
+        if (createDto.CategoryId.HasValue)
+        {
+            //lookup and 404 if not found
+            category = await _categoryRepository.GetByIdAsync(createDto.CategoryId.Value)
+                           ?? throw new EntityNotFoundException($"Category with ID {createDto.CategoryId} was not found.");
+            
+            //if category doesnt belong to user
+            if (category.UserId != senderUserId)
+            {
+                throw new UnauthorizedOperationException("You do not own the selected category.");
+            }
+        }
+
         var recipientWallets = (await _walletRepository.GetByUserIdAsync(recipientUser.Id)).ToList();
         var recipientWallet = recipientWallets.FirstOrDefault(w => w.IsDefault)
                               ?? recipientWallets.FirstOrDefault()
@@ -193,6 +214,6 @@ public class TransactionService : ITransactionService
             recipientWallet = await _walletRepository.GetByIdWithDetailsAsync(recipientWallet.Id) ?? recipientWallet;
         }
 
-        return (senderUser, senderWallet, recipientUser, recipientWallet);
+        return (senderUser, senderWallet, recipientUser, recipientWallet, category);
     }
 }

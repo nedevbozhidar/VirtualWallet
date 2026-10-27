@@ -20,7 +20,7 @@ public class TransactionController : ControllerBase
     }
 
     [HttpPost("preview")]
-    public async Task<IActionResult> PreviewTransactionAsync([FromBody] TransactionCreateDto transactionCreateDto)
+    public async Task<IActionResult> PreviewTransaction([FromBody] TransactionCreateDto transactionCreateDto)
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
 
@@ -47,7 +47,7 @@ public class TransactionController : ControllerBase
     }
 
     [HttpPost("execute")]
-    public async Task<IActionResult> ExecuteTransactionAsync([FromBody] TransactionCreateDto transactionCreateDto)
+    public async Task<IActionResult> ExecuteTransaction([FromBody] TransactionCreateDto transactionCreateDto)
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
 
@@ -78,7 +78,7 @@ public class TransactionController : ControllerBase
     }
 
     [HttpGet("{transactionId:int}")]
-    public async Task<IActionResult> GetByIdAsync(int transactionId)
+    public async Task<IActionResult> GetById(int transactionId)
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
 
@@ -99,7 +99,7 @@ public class TransactionController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetFilteredTransactionsAsync([FromQuery] TransactionFilterDto filterDto)
+    public async Task<IActionResult> GetFilteredTransactions([FromQuery] TransactionFilterDto filterDto)
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
 

@@ -46,6 +46,7 @@ builder.Services.AddScoped<IWalletRepository, WalletRepository>();
 builder.Services.AddScoped<ICardRepository, CardRepository>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ITransferRepository, TransferRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
 // Business Services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -53,6 +54,7 @@ builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddHttpClient<ITransferService, TransferService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 var app = builder.Build();
 

@@ -19,7 +19,8 @@ public interface ITransactionRepository
         string? sortBy = null,
         bool isDescending = true,
         int pageNumber = 1,
-        int pageSize = 10);
+        int pageSize = 10,
+        int? categoryId = null);
     Task AddAsync(Transaction transaction);
     Task UpdateAsync(Transaction transaction);
     Task SaveChangesAsync();
