@@ -294,7 +294,8 @@ public class CardServiceTests
 
         List<Card> cards = new List<Card>
         {
-            new Card { Id = cardId, CardHolder = "User1", UserId = userId },
+            new Card { Id = cardId, CardHolder = "User1", UserId = userId, IsPrimary = false},
+            new Card { Id = 2, CardHolder = "User2", UserId =  userId, IsPrimary = true}
         };
         
         FakeCardRepository cardRepository = new FakeCardRepository(cards);
