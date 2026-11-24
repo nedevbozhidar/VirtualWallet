@@ -8,7 +8,7 @@ public interface IUserService
     Task<UserResponseDto> AuthenticateAsync(UserLoginDto loginDto);
     Task<UserResponseDto> GetByIdAsync(int id);
     Task<UserResponseDto> GetByUsernameAsync(string username);
-    Task<UserResponseDto?> FindRecipientAsync(string identifier);
+    Task<UserResponseDto?> FindRecipientAsync(string? identifier);
     Task<IEnumerable<UserResponseDto>> GetAllAsync();
     Task<UserResponseDto> UpdateProfileAsync(int userId, UserProfileUpdateDto updateDto);
     Task BlockUserAsync(int userId);

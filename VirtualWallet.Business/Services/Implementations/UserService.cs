@@ -107,7 +107,7 @@ public class UserService : IUserService
         return MapToDto(user);
     }
 
-    public async Task<UserResponseDto?> FindRecipientAsync(string identifier)
+    public async Task<UserResponseDto?> FindRecipientAsync(string? identifier)
     {
         if (string.IsNullOrWhiteSpace(identifier))
             return null;
